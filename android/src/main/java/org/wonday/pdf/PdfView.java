@@ -167,14 +167,17 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
         float yReal;
 
         if (this.isSwipeVertical()) {
-            xReal = xPositionInRealScale;
+			xReal = xPositionInRealScale;
             yReal = yPositionInRealScale - ((page - 1) * this.getPageSize(page).getHeight());
         } else {
             xReal = xPositionInRealScale - ((page - 1) * this.getPageSize(page).getWidth());
             yReal = yPositionInRealScale;
         }
 
-        WritableMap event = Arguments.createMap();
+		xReal = (xReal / this.getPageSize(page).getWidth() * 100);
+		yReal = (yReal / this.getPageSize(page).getHeight() * 100);
+
+		WritableMap event = Arguments.createMap();
         event.putString("message", "pageSingleTap|"+page+"|"+xReal+"|"+yReal);
 
         ReactContext reactContext = (ReactContext)this.getContext();
@@ -186,7 +189,6 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
 
         // process as tap
          return true;
-
     }
 
     @Override
