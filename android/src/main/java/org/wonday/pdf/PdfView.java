@@ -174,6 +174,9 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
             yReal = yPositionInRealScale;
         }
 
+        xReal = (xReal / this.getPageSize(page).getWidth() * 100);
+        yReal = (yReal / this.getPageSize(page).getHeight() * 100);
+
         WritableMap event = Arguments.createMap();
         event.putString("message", "pageSingleTap|"+page+"|"+xReal+"|"+yReal);
 
@@ -186,7 +189,6 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
 
         // process as tap
          return true;
-
     }
 
     @Override
