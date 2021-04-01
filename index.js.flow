@@ -41,6 +41,7 @@ export type Props = {
   horizontal?: boolean,
   maxScale?: number,
   minScale?: number,
+  singlePage?: boolean,
   onError?: (error: Error) => void,
   onLoadComplete?: (numberOfPages: number, path: string, size: { height: number, width: number }, tableContents: ?TableContent[]) => void,
   onLoadProgress?: (percent: number) => void,
@@ -57,4 +58,6 @@ export type Props = {
   testID?: string
 };
 
-declare export default class Pdf extends Component<Props> {}
+declare export default class Pdf extends Component<Props> {
+  setPage: (pageNumber: number) => void;
+}
