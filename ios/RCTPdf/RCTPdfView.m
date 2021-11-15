@@ -299,7 +299,6 @@ const float MIN_SCALE = 1.0f;
     }
 }
 
-
 - (void)reactSetFrame:(CGRect)frame
 {
     [super reactSetFrame:frame];
