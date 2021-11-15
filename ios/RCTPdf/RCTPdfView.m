@@ -253,8 +253,13 @@ const float MIN_SCALE = 1.0f;
         }
 
         if (_pdfDocument && ([changedProps containsObject:@"path"] || [changedProps containsObject:@"enablePaging"])) {
+            PDFPage *currentPage = _pdfView.currentPage;
+
             if (_enablePaging) {
                 [_pdfView usePageViewController:YES withViewOptions:@{UIPageViewControllerOptionSpineLocationKey:@(UIPageViewControllerSpineLocationMin),UIPageViewControllerOptionInterPageSpacingKey:@(_spacing)}];
+                
+                [_pdfView goToPage:currentPage];
+                
             } else {
                 [_pdfView usePageViewController:NO withViewOptions:Nil];
             }
@@ -271,18 +276,18 @@ const float MIN_SCALE = 1.0f;
         }
 
         if (_pdfDocument && ([changedProps containsObject:@"path"] || [changedProps containsObject:@"enablePaging"] || [changedProps containsObject:@"horizontal"] || [changedProps containsObject:@"page"])) {
+            PDFPage *currentPage = _pdfView.currentPage;
 
-            PDFPage *pdfPage = [_pdfDocument pageAtIndex:_page-1];
-            if (pdfPage) {
-                CGRect pdfPageRect = [pdfPage boundsForBox:kPDFDisplayBoxCropBox];
+            if (currentPage) {
+                CGRect pdfPageRect = [currentPage boundsForBox:kPDFDisplayBoxCropBox];
 
                 // some pdf with rotation, then adjust it
-                if (pdfPage.rotation == 90 || pdfPage.rotation == 270) {
+                if (currentPage.rotation == 90 || currentPage.rotation == 270) {
                     pdfPageRect = CGRectMake(0, 0, pdfPageRect.size.height, pdfPageRect.size.width);
                 }
 
                 CGPoint pointLeftTop = CGPointMake(0, pdfPageRect.size.height);
-                PDFDestination *pdfDest = [[PDFDestination alloc] initWithPage:pdfPage atPoint:pointLeftTop];
+                PDFDestination *pdfDest = [[PDFDestination alloc] initWithPage:currentPage atPoint:pointLeftTop];
                 [_pdfView goToDestination:pdfDest];
                 _pdfView.scaleFactor = _fixScaleFactor*_scale;
             }
