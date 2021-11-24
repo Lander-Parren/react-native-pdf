@@ -186,6 +186,18 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
         xReal = (xReal / PageWidth * 100);
         yReal = (yReal / PageHeight * 100);
 
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            do {
+                if (xReal > 100) {
+                    xReal = xReal - 100;
+                    page = page +1;
+                } else if (xReal < 0) {
+                    xReal = xReal + 100;
+                    page = page -1;
+                }
+            } while (xReal > 100 || xReal < 0);
+        }
+
         WritableMap event = Arguments.createMap();
         event.putString("message", "pageSingleTap|"+page+"|"+xReal+"|"+yReal);
 
