@@ -10,6 +10,7 @@ package org.wonday.pdf;
 
 import java.io.File;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +50,9 @@ import com.facebook.common.logging.FLog;
 import com.facebook.react.common.ReactConstants;
 
 import static java.lang.String.format;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.lang.ClassCastException;
 
 import com.shockwave.pdfium.PdfDocument;
@@ -182,6 +186,18 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
         xReal = (xReal / PageWidth * 100);
         yReal = (yReal / PageHeight * 100);
 
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            do {
+                if (xReal > 100) {
+                    xReal = xReal - 100;
+                    page = page +1;
+                } else if (xReal < 0) {
+                    xReal = xReal + 100;
+                    page = page -1;
+                }
+            } while (xReal > 100 || xReal < 0);
+        }
+
         WritableMap event = Arguments.createMap();
         event.putString("message", "pageSingleTap|"+page+"|"+xReal+"|"+yReal);
 
@@ -241,8 +257,23 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
             Constants.Pinch.MINIMUM_ZOOM = this.minScale;
             Constants.Pinch.MAXIMUM_ZOOM = this.maxScale;
 
-            Configurator configurator = this.fromUri(getURI(this.path))
-                .defaultPage(this.page-1)
+            Configurator configurator;
+
+            if (this.path.startsWith("content://")) {
+                ContentResolver contentResolver = getContext().getContentResolver();
+                InputStream inputStream = null;
+                Uri uri = Uri.parse(this.path);
+                try {
+                    inputStream = contentResolver.openInputStream(uri);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e.getMessage());
+                }
+                configurator = this.fromStream(inputStream);
+            } else {
+                configurator = this.fromUri(getURI(this.path));
+            }
+
+            configurator.defaultPage(this.page-1)
                 .swipeHorizontal(this.horizontal)
                 .onPageChange(this)
                 .onLoad(this)

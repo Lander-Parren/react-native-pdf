@@ -15,25 +15,11 @@ import {
     Platform,
     ViewPropTypes,
     StyleSheet,
-    Image
+    Image,
+    Text
 } from 'react-native';
 
-import { ProgressBar } from '@react-native-community/progress-bar-android'
-import { ProgressView } from '@react-native-community/progress-view'
-
-let RNFetchBlob;
-try {
-    RNFetchBlob = require('react-native-blob-util').default;
-} catch(e) {
-    // For Windows, when not using rn-fetch-blob with Windows support.
-    RNFetchBlob = {
-        fs : {
-            dirs: {
-                CacheDir: ''
-            }
-        }
-    };
-}
+import ReactNativeBlobUtil from 'react-native-blob-util'
 
 const SHA1 = require('crypto-js/sha1');
 import PdfView from './PdfView';
@@ -46,6 +32,7 @@ export default class Pdf extends Component {
             PropTypes.shape({
                 uri: PropTypes.string,
                 cache: PropTypes.bool,
+                cacheFileName: PropTypes.string,
                 expiration: PropTypes.number,
             }),
             // Opaque type returned by require('./test.pdf')
@@ -58,9 +45,7 @@ export default class Pdf extends Component {
         horizontal: PropTypes.bool,
         spacing: PropTypes.number,
         password: PropTypes.string,
-        progressBarColor: PropTypes.string,
-        activityIndicator: PropTypes.any,
-        activityIndicatorProps: PropTypes.any,
+        renderActivityIndicator: PropTypes.func,
         enableAntialiasing: PropTypes.bool,
         enableAnnotationRendering: PropTypes.bool,
         enablePaging: PropTypes.bool,
@@ -98,7 +83,6 @@ export default class Pdf extends Component {
         enableAnnotationRendering: true,
         enablePaging: false,
         enableRTL: false,
-        activityIndicatorProps: {color: '#009900', progressTintColor: '#009900'},
         trustAllCerts: true,
         usePDFKit: true,
         singlePage: false,
@@ -182,10 +166,11 @@ export default class Pdf extends Component {
         if (this._mounted) {
             this.setState({isDownloaded: false, path: '', progress: 0});
         }
-        const cacheFile = RNFetchBlob.fs.dirs.CacheDir + '/' + SHA1(uri) + '.pdf';
+        const filename = source.cacheFileName || SHA1(uri) + '.pdf';
+        const cacheFile = ReactNativeBlobUtil.fs.dirs.CacheDir + '/' + filename;
 
         if (source.cache) {
-            RNFetchBlob.fs
+            ReactNativeBlobUtil.fs
                 .stat(cacheFile)
                 .then(stats => {
                     if (!Boolean(source.expiration) || (source.expiration * 1000 + stats.lastModified) > (new Date().getTime())) {
@@ -216,7 +201,8 @@ export default class Pdf extends Component {
                 const isAsset = !!(uri && uri.match(/^bundle-assets:\/\//));
                 const isBase64 = !!(uri && uri.match(/^data:application\/pdf;base64/));
 
-                const cacheFile = RNFetchBlob.fs.dirs.CacheDir + '/' + SHA1(uri) + '.pdf';
+                const filename = source.cacheFileName || SHA1(uri) + '.pdf';
+                const cacheFile = ReactNativeBlobUtil.fs.dirs.CacheDir + '/' + filename;
 
                 // delete old cache file
                 this._unlinkFile(cacheFile);
@@ -224,7 +210,7 @@ export default class Pdf extends Component {
                 if (isNetwork) {
                     this._downloadFile(source, cacheFile);
                 } else if (isAsset) {
-                    RNFetchBlob.fs
+                    ReactNativeBlobUtil.fs
                         .cp(uri, cacheFile)
                         .then(() => {
                             if (this._mounted) {
@@ -237,7 +223,7 @@ export default class Pdf extends Component {
                         })
                 } else if (isBase64) {
                     let data = uri.replace(/data:application\/pdf;base64,/i, '');
-                    RNFetchBlob.fs
+                    ReactNativeBlobUtil.fs
                         .writeFile(cacheFile, data, 'base64')
                         .then(() => {
                             if (this._mounted) {
@@ -277,7 +263,7 @@ export default class Pdf extends Component {
         const tempCacheFile = cacheFile + '.tmp';
         this._unlinkFile(tempCacheFile);
 
-        this.lastRNBFTask = RNFetchBlob.config({
+        this.lastRNBFTask = ReactNativeBlobUtil.config({
             // response data will be saved to this path if it has access right.
             path: tempCacheFile,
             trusty: this.props.trustAllCerts,
@@ -292,7 +278,7 @@ export default class Pdf extends Component {
             .progress((received, total) => {
                 this.props.onLoadProgress && this.props.onLoadProgress(received / total);
                 if (this._mounted) {
-                    this.setState({progress: received / total});
+                    this.setState({progress: Math.floor(received / total)});
                 }
             });
 
@@ -306,7 +292,7 @@ export default class Pdf extends Component {
                     let actualContentLength;
 
                     try {
-                        const fileStats = await RNFetchBlob.fs.stat(res.path());
+                        const fileStats = await ReactNativeBlobUtil.fs.stat(res.path());
 
                         if (!fileStats || !fileStats.size) {
                             throw new Error("FileNotFound:" + source.uri);
@@ -323,7 +309,7 @@ export default class Pdf extends Component {
                 }
 
                 this._unlinkFile(cacheFile);
-                RNFetchBlob.fs
+                ReactNativeBlobUtil.fs
                     .cp(tempCacheFile, cacheFile)
                     .then(() => {
                         if (this._mounted) {
@@ -345,7 +331,7 @@ export default class Pdf extends Component {
 
     _unlinkFile = async (file) => {
         try {
-            await RNFetchBlob.fs.unlink(file);
+            await ReactNativeBlobUtil.fs.unlink(file);
         } catch (e) {
 
         }
@@ -409,21 +395,9 @@ export default class Pdf extends Component {
                             (<View
                                 style={styles.progressContainer}
                             >
-                                {this.props.activityIndicator
-                                    ? this.props.activityIndicator
-                                    : Platform.OS === 'android'
-                                        ? <ProgressBar
-                                            progress={this.state.progress}
-                                            indeterminate={false}
-                                            styleAttr="Horizontal"
-                                            style={styles.progressBar}
-                                            {...this.props.activityIndicatorProps}
-                                        />
-                                        : <ProgressView
-                                            progress={this.state.progress}
-                                            style={styles.progressBar}
-                                            {...this.props.activityIndicatorProps}
-                                        />}
+                                {this.props.renderActivityIndicator
+                                    ? this.props.renderActivityIndicator(this.state.progress)
+                                    : <Text>{`${this.state.progress}%`}</Text>}
                             </View>):(
                                 Platform.OS === "android" || Platform.OS === "windows"?(
                                         <PdfCustom
