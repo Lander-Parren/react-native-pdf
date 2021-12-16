@@ -82,7 +82,6 @@ const float MIN_SCALE = 1.0f;
 
         [self addSubview:_pdfView];
 
-
         // register notification
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
         [center addObserver:self selector:@selector(onDocumentChanged:) name:PDFViewDocumentChangedNotification object:_pdfView];
@@ -92,10 +91,8 @@ const float MIN_SCALE = 1.0f;
         [[_pdfView document] setDelegate: self];
         [_pdfView setDelegate: self];
 
-
         [self bindTap];
     }
-
     return self;
 }
 
@@ -111,19 +108,14 @@ const float MIN_SCALE = 1.0f;
 - (void)didSetProps:(NSArray<NSString *> *)changedProps
 {
     if (!_initialed) {
-
         _changedProps = changedProps;
-
     } else {
-
         if ([changedProps containsObject:@"path"]) {
-
-
             if (_pdfDocument != Nil) {
                 //Release old doc
                 _pdfDocument = Nil;
             }
-            
+
             if ([_path hasPrefix:@"blob:"]) {
                 RCTBlobManager *blobManager = [_bridge moduleForName:@"BlobModule"];
                 NSURL *blobURL = [NSURL URLWithString:_path];
@@ -149,7 +141,6 @@ const float MIN_SCALE = 1.0f;
 
                 _pdfView.document = _pdfDocument;
             } else {
-
                 _onChange(@{ @"message": [[NSString alloc] initWithString:[NSString stringWithFormat:@"error|Load pdf failed. path=%s",_path.UTF8String]]});
 
                 _pdfDocument = Nil;
@@ -233,7 +224,6 @@ const float MIN_SCALE = 1.0f;
                     _pdfView.maxScaleFactor = _fixScaleFactor*_maxScale;
                 }
             }
-
         }
 
         if (_pdfDocument && ([changedProps containsObject:@"path"] || [changedProps containsObject:@"scale"])) {
@@ -259,9 +249,13 @@ const float MIN_SCALE = 1.0f;
                 [_pdfView usePageViewController:YES withViewOptions:@{UIPageViewControllerOptionSpineLocationKey:@(UIPageViewControllerSpineLocationMin),UIPageViewControllerOptionInterPageSpacingKey:@(_spacing)}];
                 
                 [_pdfView goToPage:currentPage];
-                
             } else {
                 [_pdfView usePageViewController:NO withViewOptions:Nil];
+
+                _pdfView.minScaleFactor = _pdfView.scaleFactorForSizeToFit;
+                _pdfView.scaleFactor = _pdfView.scaleFactorForSizeToFit;
+                
+                [_pdfView goToPage:currentPage];
             }
         }
 
@@ -277,8 +271,8 @@ const float MIN_SCALE = 1.0f;
 
         if (_pdfDocument && ([changedProps containsObject:@"path"] || [changedProps containsObject:@"enablePaging"] || [changedProps containsObject:@"horizontal"] || [changedProps containsObject:@"page"])) {
             PDFPage *pdfPage = _pdfView.currentPage;
-            
-            if([changedProps containsObject:@"page"]) {
+
+            if([[changedProps objectAtIndex:0] isEqualToString:@"page"]) {
                 pdfPage = [_pdfDocument pageAtIndex:_page-1];
             };
 
@@ -326,13 +320,11 @@ const float MIN_SCALE = 1.0f;
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"PDFViewDocumentChangedNotification" object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"PDFViewPageChangedNotification" object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"PDFViewScaleChangedNotification" object:nil];
-
 }
 
 #pragma mark notification process
 - (void)onDocumentChanged:(NSNotification *)noti
 {
-
     if (_pdfDocument) {
 
         unsigned long numberOfPages = _pdfDocument.pageCount;
@@ -342,7 +334,6 @@ const float MIN_SCALE = 1.0f;
 
         _onChange(@{ @"message": [[NSString alloc] initWithString:[NSString stringWithFormat:@"loadComplete|%lu|%f|%f|%@", numberOfPages, pageSize.width, pageSize.height,jsonString]]});
     }
-
 }
 
 -(NSString *) getTableContents
@@ -418,7 +409,6 @@ const float MIN_SCALE = 1.0f;
             [DXChildContent setObject:[NSString stringWithFormat:@"%lu", [_pdfDocument indexForPage:currentOutline.destination.page]] forKey:@"pageIdx"];
             [DXChildContent setObject:currentOutline.label forKey:@"title"];
             [arrChildren addObject:DXChildContent];
-
         }
     }
 
@@ -428,12 +418,10 @@ const float MIN_SCALE = 1.0f;
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 
     return jsonString;
-
 }
 
 - (void)onPageChanged:(NSNotification *)noti
 {
-
     if (_pdfDocument) {
         PDFPage *currentPage = _pdfView.currentPage;
         unsigned long page = [_pdfDocument indexForPage:currentPage];
@@ -441,7 +429,6 @@ const float MIN_SCALE = 1.0f;
 
         _onChange(@{ @"message": [[NSString alloc] initWithString:[NSString stringWithFormat:@"pageChanged|%lu|%lu", page+1, numberOfPages]]});
     }
-
 }
 
 - (void)onScaleChanged:(NSNotification *)noti
@@ -472,8 +459,6 @@ const float MIN_SCALE = 1.0f;
     float scale = self->_scale;
     if (self->_scale < mid) {
         scale = mid;
-    } else if (self->_scale < max) {
-        scale = max;
     } else {
         scale = min;
     }
@@ -519,8 +504,6 @@ const float MIN_SCALE = 1.0f;
 
     //[self setNeedsDisplay];
     //[self onScaleChanged:Nil];
-
-
 }
 
 /**
@@ -581,11 +564,9 @@ const float MIN_SCALE = 1.0f;
     longPressRecognizer.minimumPressDuration=0.3;
 
     [self addGestureRecognizer:longPressRecognizer];
-
 }
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
-
 {
     return !_singlePage;
 }
@@ -594,7 +575,5 @@ const float MIN_SCALE = 1.0f;
 {
     return !_singlePage;
 }
-
-
 
 @end
