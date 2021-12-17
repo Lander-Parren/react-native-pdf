@@ -269,12 +269,8 @@ const float MIN_SCALE = 1.0f;
             }
         }
 
-        if (_pdfDocument && ([changedProps containsObject:@"path"] || [changedProps containsObject:@"enablePaging"] || [changedProps containsObject:@"horizontal"] || [changedProps containsObject:@"page"])) {
+        if (_pdfDocument && ([changedProps containsObject:@"path"] || [changedProps containsObject:@"enablePaging"] || [changedProps containsObject:@"horizontal"])) {
             PDFPage *pdfPage = _pdfView.currentPage;
-
-            if([[changedProps objectAtIndex:0] isEqualToString:@"page"]) {
-                pdfPage = [_pdfDocument pageAtIndex:_page-1];
-            };
 
             if (pdfPage) {
                 CGRect pdfPageRect = [pdfPage boundsForBox:kPDFDisplayBoxCropBox];
@@ -284,11 +280,15 @@ const float MIN_SCALE = 1.0f;
                     pdfPageRect = CGRectMake(0, 0, pdfPageRect.size.height, pdfPageRect.size.width);
                 }
 
-                CGPoint pointLeftTop = CGPointMake(0, pdfPageRect.size.height);
-                PDFDestination *pdfDest = [[PDFDestination alloc] initWithPage:pdfPage atPoint:pointLeftTop];
-                [_pdfView goToDestination:pdfDest];
+                [_pdfView goToPage:pdfPage];
                 _pdfView.scaleFactor = _fixScaleFactor*_scale;
             }
+        }
+
+        if ([[changedProps objectAtIndex:0] isEqualToString:@"page"]) {
+            PDFPage *pdfPage = [_pdfDocument pageAtIndex:_page-1];
+
+            [_pdfView goToPage:pdfPage];
         }
 
         _pdfView.backgroundColor = [UIColor clearColor];
