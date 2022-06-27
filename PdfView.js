@@ -36,6 +36,7 @@ export default class PdfView extends Component {
         fitPolicy: PropTypes.number,
         horizontal: PropTypes.bool,
         page: PropTypes.number,
+        initialPageiOS: PropTypes.number,
         currentPage: PropTypes.number,
         singlePage: PropTypes.bool,
         onPageSingleTap: PropTypes.func,
@@ -54,6 +55,7 @@ export default class PdfView extends Component {
         horizontal: false,
         centerContent: false,
         page: 1,
+        initialPageiOS: -1,
         currentPage: -1,
         enablePaging: false,
         singlePage: false,
@@ -64,13 +66,13 @@ export default class PdfView extends Component {
     };
 
     constructor(props) {
-
         super(props);
         this.state = {
             pdfLoaded: false,
             fileNo: -1,
             numberOfPages: 0,
             page: -1,
+            initialPageiOS: -1,
             currentPage: -1,
             pageAspectRate: 0.5,
             pdfPageSize: {width: 0, height: 0},
@@ -125,7 +127,6 @@ export default class PdfView extends Component {
     }
 
     componentDidUpdate(prevProps) {
-
         if (this.props.scale !== this.state.scale) {
             this._onScaleChanged({
                 scale: this.props.scale / this.state.scale,

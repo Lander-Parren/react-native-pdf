@@ -31,6 +31,7 @@ interface Props {
     style?: ReactNative.StyleProp<ReactNative.ViewStyle>,
     source: Source | number,
     page?: number,
+    initialPageiOS?: number,
     scale?: number,
     minScale?: number,
     maxScale?: number,

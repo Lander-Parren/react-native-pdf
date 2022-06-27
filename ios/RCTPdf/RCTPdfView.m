@@ -57,6 +57,7 @@ const float MIN_SCALE = 1.0f;
 
         _bridge = bridge;
         _page = 1;
+        _initialPageiOS = -1;
         _scale = 1;
         _minScale = MIN_SCALE;
         _maxScale = MAX_SCALE;
@@ -247,14 +248,14 @@ const float MIN_SCALE = 1.0f;
 
             if (_enablePaging) {
                 [_pdfView usePageViewController:YES withViewOptions:@{UIPageViewControllerOptionSpineLocationKey:@(UIPageViewControllerSpineLocationMin),UIPageViewControllerOptionInterPageSpacingKey:@(_spacing)}];
-                
+
                 [_pdfView goToPage:currentPage];
             } else {
                 [_pdfView usePageViewController:NO withViewOptions:Nil];
 
                 _pdfView.minScaleFactor = _pdfView.scaleFactorForSizeToFit;
                 _pdfView.scaleFactor = _pdfView.scaleFactorForSizeToFit;
-                
+
                 [_pdfView goToPage:currentPage];
             }
         }
@@ -289,6 +290,26 @@ const float MIN_SCALE = 1.0f;
             PDFPage *pdfPage = [_pdfDocument pageAtIndex:_page-1];
 
             [_pdfView goToPage:pdfPage];
+        }
+
+        if (_pdfDocument && [changedProps containsObject:@"initialPageiOS"]) {
+            PDFPage *pdfPage = [_pdfDocument pageAtIndex:_page-1];
+
+            if (pdfPage && _initialPageiOS > 0) {
+                CGRect pdfPageRect = [pdfPage boundsForBox:kPDFDisplayBoxCropBox];
+
+                // some pdf with rotation, then adjust it
+                if (pdfPage.rotation == 90 || pdfPage.rotation == 270) {
+                    pdfPageRect = CGRectMake(0, 0, pdfPageRect.size.height, pdfPageRect.size.width);
+                }
+
+                CGPoint pointLeftTop = CGPointMake(0, pdfPageRect.size.height);
+                PDFDestination *pdfDest = [[PDFDestination alloc] initWithPage:pdfPage atPoint:pointLeftTop];
+                [_pdfView goToDestination:pdfDest];
+                _pdfView.scaleFactor = _fixScaleFactor*_scale;
+
+                _initialPageiOS = -1;
+            }
         }
 
         _pdfView.backgroundColor = [UIColor clearColor];

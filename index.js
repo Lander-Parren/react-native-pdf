@@ -39,6 +39,7 @@ export default class Pdf extends Component {
             PropTypes.number,
         ]).isRequired,
         page: PropTypes.number,
+        initialPageiOS: PropTypes.number,
         scale: PropTypes.number,
         minScale: PropTypes.number,
         maxScale: PropTypes.number,
@@ -79,6 +80,7 @@ export default class Pdf extends Component {
         fitPolicy: 2, //fit both
         horizontal: false,
         page: 1,
+        initialPageiOS: -1,
         enableAntialiasing: true,
         enableAnnotationRendering: true,
         enablePaging: false,
