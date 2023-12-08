@@ -306,12 +306,12 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
 
     public void setPath(String path) {
         this.path = path;
-        drawPdf();
     }
 
     // page start from 1
     public void setPage(int page) {
         this.page = page>1?page:1;
+        drawPdf();
     }
 
     public void setScale(float scale) {
