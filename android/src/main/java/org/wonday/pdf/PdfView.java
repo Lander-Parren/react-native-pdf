@@ -312,6 +312,7 @@ public class PdfView extends PDFView implements OnPageChangeListener,OnLoadCompl
     public void setPage(int page) {
         this.page = page>1?page:1;
         drawPdf();
+        jumpTo(this.page - 1);
     }
 
     public void setScale(float scale) {
